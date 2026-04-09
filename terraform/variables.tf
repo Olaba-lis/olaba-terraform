@@ -1,7 +1,10 @@
 variable "project_id" { type = string }
 variable "project_name" { type = string }
 variable "billing_account" { type = string }
-variable "region" { type = string  default = "europe-west4" }
+variable "region" {
+  type    = string
+  default = "europe-west4"
+}
 variable "zones" {
   type    = list(string)
   default = ["europe-west4-a", "europe-west4-b", "europe-west4-c"]

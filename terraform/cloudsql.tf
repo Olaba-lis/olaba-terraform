@@ -61,7 +61,9 @@ resource "google_sql_user" "platform_app" {
 
 resource "google_secret_manager_secret" "platform_db_password" {
   secret_id = "platform-db-password"
-  replication { auto {} }
+  replication { 
+      auto {}
+  }
   labels = local.common_labels
 }
 

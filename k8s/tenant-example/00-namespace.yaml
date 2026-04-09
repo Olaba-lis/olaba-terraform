@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tenant-lab01
+  labels:
+    tenant: lab01
+    app: senaite

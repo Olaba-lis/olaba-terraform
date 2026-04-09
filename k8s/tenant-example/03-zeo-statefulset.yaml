@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: senaite-zeo
+  namespace: tenant-lab01
+spec:
+  selector:
+    app: senaite-zeo
+  ports:
+    - name: zeo
+      port: 8100
+      targetPort: 8100
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: senaite-zeo
+  namespace: tenant-lab01
+spec:
+  serviceName: senaite-zeo
+  replicas: 1
+  selector:
+    matchLabels:
+      app: senaite-zeo
+  template:
+    metadata:
+      labels:
+        app: senaite-zeo
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: zeo
+          image: plone/plone-zeo:latest
+          ports:
+            - containerPort: 8100
+              name: zeo
+          volumeMounts:
+            - name: zeodata
+              mountPath: /data
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+  volumeClaimTemplates:
+    - metadata:
+        name: zeodata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: regional-rwo
+        resources:
+          requests:
+            storage: 100Gi

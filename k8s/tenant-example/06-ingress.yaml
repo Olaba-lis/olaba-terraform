@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: senaite-ingress
+  namespace: tenant-lab01
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "prod-senaite-ingress-ip"
+    ingress.gcp.kubernetes.io/pre-shared-cert: "REPLACE_WITH_GCP_SSL_CERT_NAME"
+    cloud.google.com/backend-config: '{"default": "senaite-web-backendconfig"}'
+spec:
+  rules:
+    - host: lab01.olaba-lis.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: senaite-web
+                port:
+                  number: 80

@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: senaite-web
+  namespace: tenant-lab01
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
+spec:
+  selector:
+    app: senaite-web
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: senaite-web
+  namespace: tenant-lab01
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: senaite-web
+  template:
+    metadata:
+      labels:
+        app: senaite-web
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: senaite
+          image: europe-west4-docker.pkg.dev/PROJECT_ID/senaite/senaite:REPLACE_ME
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: ZEO_ADDRESS
+              value: "senaite-zeo:8100"
+            - name: VIRTUAL_HOST
+              value: "lab01.olaba-lis.com"
+          envFrom:
+            - secretRef:
+                name: senaite-app-secrets
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: "1"
+              memory: "2Gi"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: senaite-web
+  namespace: tenant-lab01
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: senaite-web
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

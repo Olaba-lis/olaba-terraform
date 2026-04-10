@@ -128,9 +128,3 @@ variable "labels" {
     managed_by  = "terraform"
     environment = "prod"
   }
-<<<<<<< HEAD
-}
-=======
-}
-
->>>>>>> d941c3c77f886dd82cecb4fcb7f2e44fde792ad4

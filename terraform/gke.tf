@@ -50,11 +50,6 @@ resource "google_container_cluster" "autopilot" {
     evaluation_mode = var.enable_binary_authorization ? "PROJECT_SINGLETON_POLICY_ENFORCE" : "DISABLED"
   }
 
-  network_policy {
-    enabled  = true
-    provider = "CALICO"
-  }
-
   monitoring_config {
     enable_components = [
       "APISERVER",

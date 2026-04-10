@@ -1,4 +1,4 @@
-resource "cloudflare_dns_record" "tenant_hosts" {
+resource "cloudflare_record" "tenant_hosts" {
   for_each = toset(var.tenant_hosts)
 
   zone_id = var.cloudflare_zone_id

@@ -128,3 +128,4 @@ variable "labels" {
     managed_by  = "terraform"
     environment = "prod"
   }
+}

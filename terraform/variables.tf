@@ -82,7 +82,7 @@ variable "deletion_protection" {
 
 variable "db_tier" {
   type    = string
-  default = "db-custom-4-16384"
+  default = "db-perf-optimized-N-2"
 }
 
 variable "db_disk_size_gb" {

@@ -51,14 +51,6 @@ resource "google_container_cluster" "autopilot" {
   }
 
   monitoring_config {
-    enable_components = [
-      "APISERVER",
-      "CONTROLLER_MANAGER",
-      "SCHEDULER",
-      "SYSTEM_COMPONENTS",
-      "WORKLOADS"
-    ]
-
     managed_prometheus {
       enabled = true
     }

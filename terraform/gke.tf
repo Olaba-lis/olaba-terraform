@@ -17,6 +17,7 @@ resource "google_project_iam_member" "gke_sa_monitoring" {
 
 resource "google_container_cluster" "autopilot" {
   provider = google-beta
+
   name     = var.gke_cluster_name
   location = var.region
 
@@ -50,18 +51,16 @@ resource "google_container_cluster" "autopilot" {
     evaluation_mode = var.enable_binary_authorization ? "PROJECT_SINGLETON_POLICY_ENFORCE" : "DISABLED"
   }
 
+  # ✅ REQUIRED for Autopilot (minimal valid config)
   monitoring_config {
-    managed_prometheus {
-      enabled = true
-    }
+    enable_components = ["SYSTEM_COMPONENTS"]
   }
 
   logging_config {
-    enable_components = [
-      "SYSTEM_COMPONENTS",
-      "WORKLOADS"
-    ]
+    enable_components = ["SYSTEM_COMPONENTS"]
   }
 
-  depends_on = [google_project_service.services]
+  depends_on = [
+    google_project_service.services
+  ]
 }

@@ -1,55 +1,50 @@
 resource "helm_release" "cert_manager" {
-  name             = "cert-manager"
-  repository       = "https://charts.jetstack.io"
-  chart            = "cert-manager"
-  namespace        = "cert-manager"
+  name       = "cert-manager"
+  namespace  = "cert-manager"
   create_namespace = true
-  timeout          = 1200
-  wait             = true
 
-  values = [yamlencode({
-    installCRDs = true
-    prometheus = {
-      enabled = true
-    }
-  })]
+  repository = "https://charts.jetstack.io"
+  chart      = "cert-manager"
 
-  depends_on = [time_sleep.wait_for_cluster]
+  values = [
+    yamlencode({
+      installCRDs = true
+    })
+  ]
 }
 
-resource "kubernetes_secret_v1" "cert_manager_cloudflare_api" {
-  metadata {
-    name      = "cloudflare-api-token"
-    namespace = "cert-manager"
-  }
-
-  data = {
-    api-token = var.cloudflare_api_token
-  }
-
-  type = "Opaque"
-
+# 🔥 WAIT FOR CRDs TO BE READY
+resource "time_sleep" "wait_cert_manager" {
   depends_on = [helm_release.cert_manager]
+
+  create_duration = "60s"
 }
 
 resource "kubernetes_manifest" "cluster_issuer" {
+  depends_on = [time_sleep.wait_cert_manager]
+
   manifest = {
     apiVersion = "cert-manager.io/v1"
     kind       = "ClusterIssuer"
+
     metadata = {
-      name = "letsencrypt-cloudflare"
+      name = "letsencrypt"
     }
+
     spec = {
       acme = {
-        email  = var.acme_email
-        server = var.acme_server
+        email  = "admin@olaba-lis.com"
+        server = "https://acme-v02.api.letsencrypt.org/directory"
+
         privateKeySecretRef = {
-          name = "letsencrypt-cloudflare-account-key"
+          name = "letsencrypt"
         }
+
         solvers = [
           {
             dns01 = {
               cloudflare = {
+                email = "admin@olaba-lis.com"
                 apiTokenSecretRef = {
                   name = "cloudflare-api-token"
                   key  = "api-token"
@@ -61,9 +56,4 @@ resource "kubernetes_manifest" "cluster_issuer" {
       }
     }
   }
-
-  depends_on = [
-    helm_release.cert_manager,
-    kubernetes_secret_v1.cert_manager_cloudflare_api
-  ]
 }

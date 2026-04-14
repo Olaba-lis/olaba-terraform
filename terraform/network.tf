@@ -58,3 +58,8 @@ resource "google_service_networking_connection" "private_vpc_connection" {
 resource "google_compute_global_address" "ingress_ip" {
   name = "${var.environment}-senaite-ingress-ip"
 }
+
+resource "google_compute_address" "nginx_ingress_ip" {
+  name   = "${var.environment}-nginx-ingress-ip"
+  region = var.region
+}

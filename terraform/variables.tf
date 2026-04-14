@@ -97,12 +97,22 @@ variable "db_availability_type" {
 
 variable "enable_cloudsql" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "enable_backup_for_gke" {
   type    = bool
-  default = false
+  default = true
+}
+
+variable "acme_email" {
+  type    = string
+  default = "admin@olaba-lis.com"
+}
+
+variable "acme_server" {
+  type    = string
+  default = "https://acme-v02.api.letsencrypt.org/directory"
 }
 
 variable "domain" {

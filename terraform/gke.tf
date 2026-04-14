@@ -21,11 +21,11 @@ resource "google_container_cluster" "autopilot" {
   name     = var.gke_cluster_name
   location = var.region
 
-  enable_autopilot      = true
-  deletion_protection   = var.deletion_protection
-  network               = google_compute_network.vpc.id
-  subnetwork            = google_compute_subnetwork.main.id
-  datapath_provider     = "ADVANCED_DATAPATH"
+  enable_autopilot    = true
+  deletion_protection = var.deletion_protection
+  network             = google_compute_network.vpc.id
+  subnetwork          = google_compute_subnetwork.main.id
+  datapath_provider   = "ADVANCED_DATAPATH"
 
   ip_allocation_policy {
     cluster_secondary_range_name  = "pods"
@@ -67,5 +67,5 @@ resource "google_container_cluster" "autopilot" {
 
 resource "time_sleep" "wait_for_cluster" {
   depends_on      = [google_container_cluster.autopilot]
-  create_duration = "60s"
+  create_duration = "90s"
 }

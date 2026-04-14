@@ -1,7 +1,6 @@
 resource "google_project_service" "services" {
   for_each = toset([
     "artifactregistry.googleapis.com",
-    "certificatemanager.googleapis.com",
     "cloudkms.googleapis.com",
     "cloudresourcemanager.googleapis.com",
     "compute.googleapis.com",
@@ -38,6 +37,7 @@ locals {
       short     = replace(split(".", host)[0], "_", "-")
       namespace = substr(replace(replace(split(".", host)[0], "_", "-"), ".", "-"), 0, 63)
       site_id   = replace(split(".", host)[0], "-", "")
+      tls_name  = "${substr(replace(replace(split(".", host)[0], "_", "-"), ".", "-"), 0, 40)}-tls"
     }
   }
 }

@@ -13,22 +13,6 @@ resource "kubernetes_namespace_v1" "tenant" {
   depends_on = [time_sleep.wait_for_cluster]
 }
 
-resource "kubernetes_secret_v1" "origin_tls" {
-  metadata {
-    name      = "origin-tls"
-    namespace = "default"
-  }
-
-  type = "kubernetes.io/tls"
-
-  data = {
-    "tls.crt" = cloudflare_origin_ca_certificate.origin_ca.certificate
-    "tls.key" = tls_private_key.origin_ca.private_key_pem
-  }
-
-  depends_on = [time_sleep.wait_for_cluster]
-}
-
 resource "kubernetes_secret_v1" "tenant_admin" {
   for_each = local.tenants
 
@@ -201,9 +185,6 @@ resource "kubernetes_service_v1" "app" {
       app    = "senaite"
       tenant = each.value.short
     }
-    annotations = {
-      "cloud.google.com/neg" = "{\"ingress\": true}"
-    }
   }
 
   spec {
@@ -340,6 +321,97 @@ resource "kubernetes_deployment_v1" "app" {
   depends_on = [kubernetes_stateful_set_v1.zeo]
 }
 
+resource "kubernetes_network_policy_v1" "deny_all_ingress" {
+  for_each = local.tenants
+
+  metadata {
+    name      = "default-deny-ingress"
+    namespace = kubernetes_namespace_v1.tenant[each.key].metadata[0].name
+  }
+
+  spec {
+    pod_selector {}
+    policy_types = ["Ingress"]
+  }
+
+  depends_on = [kubernetes_namespace_v1.tenant]
+}
+
+resource "kubernetes_network_policy_v1" "allow_app_from_ingress" {
+  for_each = local.tenants
+
+  metadata {
+    name      = "allow-app-from-ingress-nginx"
+    namespace = kubernetes_namespace_v1.tenant[each.key].metadata[0].name
+  }
+
+  spec {
+    pod_selector {
+      match_labels = {
+        app    = "senaite"
+        tenant = each.value.short
+      }
+    }
+
+    ingress {
+      from {
+        namespace_selector {
+          match_labels = {
+            "kubernetes.io/metadata.name" = "ingress-nginx"
+          }
+        }
+      }
+
+      ports {
+        port     = 8080
+        protocol = "TCP"
+      }
+    }
+
+    policy_types = ["Ingress"]
+  }
+
+  depends_on = [helm_release.ingress_nginx, kubernetes_namespace_v1.tenant]
+}
+
+resource "kubernetes_network_policy_v1" "allow_zeo_from_app" {
+  for_each = local.tenants
+
+  metadata {
+    name      = "allow-zeo-from-app"
+    namespace = kubernetes_namespace_v1.tenant[each.key].metadata[0].name
+  }
+
+  spec {
+    pod_selector {
+      match_labels = {
+        app    = "zeo"
+        tenant = each.value.short
+      }
+    }
+
+    ingress {
+      from {
+        pod_selector {
+          match_labels = {
+            app    = "senaite"
+            tenant = each.value.short
+          }
+        }
+      }
+
+      ports {
+        port     = 8080
+        protocol = "TCP"
+      }
+    }
+
+    policy_types = ["Ingress"]
+  }
+
+  depends_on = [kubernetes_namespace_v1.tenant]
+}
+
 resource "kubernetes_ingress_v1" "tenant" {
   for_each = local.tenants
 
@@ -347,15 +419,18 @@ resource "kubernetes_ingress_v1" "tenant" {
     name      = "${each.value.short}-ingress"
     namespace = kubernetes_namespace_v1.tenant[each.key].metadata[0].name
     annotations = {
-      "kubernetes.io/ingress.class"                 = "gce"
-      "kubernetes.io/ingress.allow-http"           = "false"
-      "kubernetes.io/ingress.global-static-ip-name" = google_compute_global_address.ingress_ip.name
+      "cert-manager.io/cluster-issuer"                 = "letsencrypt-cloudflare"
+      "nginx.ingress.kubernetes.io/force-ssl-redirect" = "true"
+      "nginx.ingress.kubernetes.io/proxy-body-size"    = "64m"
     }
   }
 
   spec {
+    ingress_class_name = "nginx"
+
     tls {
-      secret_name = kubernetes_secret_v1.origin_tls.metadata[0].name
+      hosts       = [each.value.host]
+      secret_name = each.value.tls_name
     }
 
     rule {
@@ -380,8 +455,9 @@ resource "kubernetes_ingress_v1" "tenant" {
   }
 
   depends_on = [
+    helm_release.ingress_nginx,
     kubernetes_deployment_v1.app,
-    kubernetes_secret_v1.origin_tls,
+    kubernetes_manifest.cluster_issuer,
     cloudflare_record.tenant_hosts
   ]
 }

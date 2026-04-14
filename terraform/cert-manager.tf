@@ -6,22 +6,18 @@ resource "helm_release" "cert_manager" {
   repository = "https://charts.jetstack.io"
   chart      = "cert-manager"
 
-  values = [
-    yamlencode({
-      installCRDs = true
-    })
-  ]
-}
+  # 🔥 THIS IS THE KEY FIX
+  set {
+    name  = "installCRDs"
+    value = "true"
+  }
 
-# 🔥 WAIT FOR CRDs TO BE READY
-resource "time_sleep" "wait_cert_manager" {
-  depends_on = [helm_release.cert_manager]
-
-  create_duration = "60s"
+  timeout = 600
+  wait    = true
 }
 
 resource "kubernetes_manifest" "cluster_issuer" {
-  depends_on = [time_sleep.wait_cert_manager]
+  depends_on = [helm_release.cert_manager]  # keep this
 
   manifest = {
     apiVersion = "cert-manager.io/v1"

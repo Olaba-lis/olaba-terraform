@@ -1,6 +1,7 @@
 resource "google_gke_backup_backup_plan" "cluster_daily" {
   count    = var.enable_backup_for_gke ? 1 : 0
   provider = google-beta
+  force_delete = true
 
   name     = "${var.gke_cluster_name}-daily"
   cluster  = google_container_cluster.autopilot.id

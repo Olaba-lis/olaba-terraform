@@ -26,7 +26,6 @@ resource "google_container_cluster" "autopilot" {
   network               = google_compute_network.vpc.id
   subnetwork            = google_compute_subnetwork.main.id
   datapath_provider     = "ADVANCED_DATAPATH"
-  default_max_pods_per_node = 32
 
   ip_allocation_policy {
     cluster_secondary_range_name  = "pods"

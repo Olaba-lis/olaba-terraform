@@ -1,13 +1,15 @@
 resource "random_password" "db_password" {
-  length  = 24
-  special = true
+  count            = var.enable_cloudsql ? 1 : 0
+  length           = 24
+  special          = true
+  override_special = "@#%^*()-_=+"
 }
 
 resource "google_sql_database_instance" "platform" {
-  name             = "${var.environment}-platform-pg-${random_id.suffix.hex}"
-  region           = var.region
-  database_version = "POSTGRES_16"
-
+  count               = var.enable_cloudsql ? 1 : 0
+  name                = "${var.environment}-platform-pg-${random_id.suffix.hex}"
+  region              = var.region
+  database_version    = "POSTGRES_16"
   deletion_protection = var.deletion_protection
 
   settings {
@@ -49,25 +51,31 @@ resource "google_sql_database_instance" "platform" {
 }
 
 resource "google_sql_database" "platform" {
+  count    = var.enable_cloudsql ? 1 : 0
   name     = "platform"
-  instance = google_sql_database_instance.platform.name
+  instance = google_sql_database_instance.platform[0].name
 }
 
 resource "google_sql_user" "platform_app" {
+  count    = var.enable_cloudsql ? 1 : 0
   name     = "platform_app"
-  instance = google_sql_database_instance.platform.name
-  password = random_password.db_password.result
+  instance = google_sql_database_instance.platform[0].name
+  password = random_password.db_password[0].result
 }
 
 resource "google_secret_manager_secret" "platform_db_password" {
+  count     = var.enable_cloudsql ? 1 : 0
   secret_id = "platform-db-password"
-  replication { 
-      auto {}
+
+  replication {
+    auto {}
   }
+
   labels = local.common_labels
 }
 
 resource "google_secret_manager_secret_version" "platform_db_password_v1" {
-  secret      = google_secret_manager_secret.platform_db_password.id
-  secret_data = random_password.db_password.result
+  count       = var.enable_cloudsql ? 1 : 0
+  secret      = google_secret_manager_secret.platform_db_password[0].id
+  secret_data = random_password.db_password[0].result
 }

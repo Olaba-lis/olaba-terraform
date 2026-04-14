@@ -21,12 +21,12 @@ resource "google_container_cluster" "autopilot" {
   name     = var.gke_cluster_name
   location = var.region
 
-  enable_autopilot = true
-
-  network    = google_compute_network.vpc.id
-  subnetwork = google_compute_subnetwork.main.id
-
-  deletion_protection = var.deletion_protection
+  enable_autopilot      = true
+  deletion_protection   = var.deletion_protection
+  network               = google_compute_network.vpc.id
+  subnetwork            = google_compute_subnetwork.main.id
+  datapath_provider     = "ADVANCED_DATAPATH"
+  default_max_pods_per_node = 32
 
   ip_allocation_policy {
     cluster_secondary_range_name  = "pods"
@@ -51,16 +51,22 @@ resource "google_container_cluster" "autopilot" {
     evaluation_mode = var.enable_binary_authorization ? "PROJECT_SINGLETON_POLICY_ENFORCE" : "DISABLED"
   }
 
-  # ✅ REQUIRED for Autopilot (minimal valid config)
   monitoring_config {
     enable_components = ["SYSTEM_COMPONENTS"]
   }
 
   logging_config {
-    enable_components = ["SYSTEM_COMPONENTS"]
+    enable_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
   }
 
   depends_on = [
-    google_project_service.services
+    google_project_service.services,
+    google_project_iam_member.gke_sa_logging,
+    google_project_iam_member.gke_sa_monitoring
   ]
+}
+
+resource "time_sleep" "wait_for_cluster" {
+  depends_on      = [google_container_cluster.autopilot]
+  create_duration = "60s"
 }

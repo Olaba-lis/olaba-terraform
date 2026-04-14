@@ -12,12 +12,12 @@ variable "billing_account" {
 
 variable "region" {
   type    = string
-  default = "europe-west4"
+  default = "europe-west3"
 }
 
 variable "zones" {
   type    = list(string)
-  default = ["europe-west4-a", "europe-west4-b", "europe-west4-c"]
+  default = ["europe-west3-a", "europe-west3-b", "europe-west3-c"]
 }
 
 variable "environment" {
@@ -95,6 +95,16 @@ variable "db_availability_type" {
   default = "REGIONAL"
 }
 
+variable "enable_cloudsql" {
+  type    = bool
+  default = false
+}
+
+variable "enable_backup_for_gke" {
+  type    = bool
+  default = false
+}
+
 variable "domain" {
   type    = string
   default = "olaba-lis.com"
@@ -115,9 +125,29 @@ variable "cloudflare_api_token" {
 }
 
 variable "tenant_hosts" {
-  description = "Subdomains to provision in Cloudflare pointing at the shared ingress IP"
+  description = "Subdomains to provision and deploy as isolated tenant namespaces"
   type        = list(string)
   default     = ["app.olaba-lis.com", "lab01.olaba-lis.com"]
+}
+
+variable "senaite_image" {
+  type    = string
+  default = "senaite/senaite:2.x"
+}
+
+variable "senaite_addons" {
+  type    = string
+  default = ""
+}
+
+variable "tenant_storage_size_gb" {
+  type    = number
+  default = 20
+}
+
+variable "tenant_app_replicas" {
+  type    = number
+  default = 2
 }
 
 variable "labels" {

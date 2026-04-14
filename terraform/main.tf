@@ -1,24 +1,23 @@
 resource "google_project_service" "services" {
   for_each = toset([
+    "artifactregistry.googleapis.com",
+    "certificatemanager.googleapis.com",
+    "cloudkms.googleapis.com",
+    "cloudresourcemanager.googleapis.com",
     "compute.googleapis.com",
     "container.googleapis.com",
-    "artifactregistry.googleapis.com",
+    "containeranalysis.googleapis.com",
+    "dns.googleapis.com",
+    "gkebackup.googleapis.com",
+    "iam.googleapis.com",
+    "logging.googleapis.com",
+    "monitoring.googleapis.com",
     "secretmanager.googleapis.com",
     "servicenetworking.googleapis.com",
-    "sqladmin.googleapis.com",
-    "monitoring.googleapis.com",
-    "logging.googleapis.com",
-    "cloudresourcemanager.googleapis.com",
-    "iam.googleapis.com",
-    "dns.googleapis.com",
-    "cloudkms.googleapis.com",
-    "gkebackup.googleapis.com",
-    "binaryauthorization.googleapis.com",
-    "containeranalysis.googleapis.com"
+    "sqladmin.googleapis.com"
   ])
 
-  service = each.key
-
+  service            = each.value
   disable_on_destroy = false
 }
 
@@ -31,4 +30,14 @@ locals {
     environment = var.environment
     project     = var.project_id
   })
+
+  tenants = {
+    for host in var.tenant_hosts :
+    host => {
+      host      = host
+      short     = replace(split(".", host)[0], "_", "-")
+      namespace = substr(replace(replace(split(".", host)[0], "_", "-"), ".", "-"), 0, 63)
+      site_id   = replace(split(".", host)[0], "-", "")
+    }
+  }
 }

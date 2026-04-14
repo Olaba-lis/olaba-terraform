@@ -1,26 +1,19 @@
-project_id          = "olaba-lis-prod"
-project_name        = "Olaba LIS Production"
-billing_account     = "000000-000000-000000"
-region              = "europe-west4"
-cloudflare_zone_id  = "YOUR_CLOUDFLARE_ZONE_ID"
+project_id          = "olaba-492612"
+project_name        = "Olaba LIS"
+billing_account     = "013C66-6D4FCE-EC7926"
+region              = "europe-west3"
+cloudflare_zone_id  = "YOUR_ZONE_ID"
 cloudflare_api_token = "YOUR_CLOUDFLARE_API_TOKEN"
-domain              = "olaba-lis.com"
-root_subdomain      = "app"
 
 tenant_hosts = [
   "app.olaba-lis.com",
-  "lab01.olaba-lis.com",
-  "lab02.olaba-lis.com"
+  "lab01.olaba-lis.com"
 ]
 
-enable_binary_authorization = false
-
-deletion_protection = true
-
-labels = {
-  app         = "senaite"
-  owner       = "olaba"
-  managed_by  = "terraform"
-  environment = "prod"
-  cost_center = "lab-platform"
-}
+# Optional
+# senaite_image         = "senaite/senaite:2.x"
+# senaite_addons        = ""
+# tenant_storage_size_gb = 20
+# tenant_app_replicas    = 2
+# enable_cloudsql        = false
+# enable_backup_for_gke  = false

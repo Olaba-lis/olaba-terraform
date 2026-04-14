@@ -1,4 +1,5 @@
 resource "google_gke_backup_backup_plan" "cluster_daily" {
+  count    = var.enable_backup_for_gke ? 1 : 0
   provider = google-beta
 
   name     = "${var.gke_cluster_name}-daily"
@@ -18,9 +19,10 @@ resource "google_gke_backup_backup_plan" "cluster_daily" {
   backup_config {
     include_volume_data = true
     include_secrets     = true
-
-    all_namespaces = true
+    all_namespaces      = true
   }
 
   labels = local.common_labels
+
+  depends_on = [time_sleep.wait_for_cluster]
 }
